@@ -52,8 +52,10 @@ const host = 'localhost'; //ip refere-se a todas as interfaces locais(placas de 
 
 
 
-var listafuncionario = []; // lista para armazenar funcionarios cadastrados
+var listacadastrado = []; // lista para armazenar cadastrados
 //implementar a funcionalidade para entregar um formulario html para o cliente
+
+var mensagens = {};
 function cadastro(req, resp) {
     resp.send(`
         <html>
@@ -76,7 +78,7 @@ function cadastro(req, resp) {
                             <label for="validationCustomUsername" class="form-label">*Email </label>
                                 <div class="input-group has-validation">
                                 <span class="input-group-text" id="inputGroupPrepend">@</span>
-                                <input type="number" class="form-control" id="Email" name="email">
+                                <input type="text" class="form-control" id="Email" name="email">
                                 </div>
                         </div>
 
@@ -113,7 +115,7 @@ function menuView(req,resp) {
         <div class="container-fluid">
             <a class="navbar-brand" href="/cadastrarusuario">MENU</a>
             <div class="navbar-nav">
-                <a class="nav-link active" aria-current="page" href="/cadastrarusuario">Cadastrar Produto</a>
+                <a class="nav-link active" aria-current="page" href="/cadastrarusuario">Cadastrar</a>
                 <li class="nav-item">
                 <a class="nav-link disabled" aria-disabled="true">Seu Ultimo acesso foi realizado em: ${dataHoraUltimoAcesso}</a>
                 </li>
@@ -140,15 +142,16 @@ function cadastrarusuario(req, resp){
 
     if(nome&& email&& senha){
         
-        const funcionario = {nome,email, senha};
+        const cadastrado = {nome,email, senha};
+        const mensagens = {};
 
-        //adiciona funcionarios a cada envio
-        listafuncionario.push(funcionario);
-        //Mostrar a Lista de funcionarios já cadastrados
+        //adiciona cadastrados a cada envio
+        listacadastrado.push(cadastrado);
+        //Mostrar a Lista decadastrados já cadastrados
         resp.write(`
             <html>
                 <head>
-                    <title> funcionarios Cadastrados </title>
+                    <title>Cadastrados </title>
                     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">           
                 </head>
                 <body>
@@ -157,18 +160,18 @@ function cadastrarusuario(req, resp){
                         <tr>
                             <th scope="col">Nome do Cadastrado</th>
                             <th scope="col">email</th>
-                            <th scope="col">senha</th>
+                            <th scope="col">Bate-Papo</th>
                         </th>
                     </thead>
                     <tbody>
                     `);
 
-                    for (var i = 0; i <listafuncionario.length; i++) {
+                    for (var i = 0; i <listacadastrado.length; i++) {
                         resp.write(`
                             <tr>
-                                <td>${listafuncionario[i].nome}</td>                        
-                                <td>${listafuncionario[i].email}</td> 
-                                <td>${listafuncionario[i].senha}</td>
+                                <td>${listacadastrado[i].nome}</td>                        
+                                <td>${listacadastrado[i].email}</td> 
+                                <td><a href="/batepapo/${listacadastrado[i].nome}">Abrir Bate-Papo</a></td>
                             </tr>
                             `);
                         
@@ -195,7 +198,7 @@ function cadastrarusuario(req, resp){
                 <body>
 
                     <div>
-                        <h1>Cadastro de funcionario</h1>
+                        <h1>Cadastro</h1>
                         <form method="POST" action="/cadastrarusuario" class="row g-3" novalidate>
                             <div class="col-md-4">
                                 <label for="nome" class="form-label">*Nome</label>
@@ -309,11 +312,54 @@ app.get('/login',(req,resp) =>{
     resp.sendFile(path.join(__dirname, 'public', 'login.html'));
     //resp.redirect('/login.html');
 });
-app.post('/login',autenticarLogin);
-app.get('/',verificarAutenticacao, menuView);
-app.get('/cadastrarusuario',verificarAutenticacao, cadastro);//envia o formulario para cadastrar o personagem
-app.post('/cadastrarusuario',verificarAutenticacao, cadastrarusuario);
+app.post('/login', autenticarLogin);
+app.get('/', verificarAutenticacao, menuView);
+app.get('/cadastrarusuario', verificarAutenticacao, cadastro);//envia o formulario para cadastrar o personagem
+app.post('/cadastrarusuario', verificarAutenticacao, cadastrarusuario);
 
+
+// Rota para exibir o bate-papo de um usuário
+app.get('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
+    const nome = req.params.nome;
+    const chatMensagens = mensagens[nome] || []; // Recupera as mensagens ou cria uma lista vazia
+
+    resp.send(`
+        <html>
+        <head>
+            <title>Bate-Papo com ${nome}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <meta charset="utf-8">
+        </head>
+        <body>
+            <h1>Bate-Papo com ${nome}</h1>
+            <div>
+                <ul>
+                    ${chatMensagens.map(msg => `<li>${msg}</li>`).join('')}
+                </ul>
+            </div>
+            <form method="POST" action="/batepapo/${nome}">
+                <input type="text" name="mensagem" placeholder="Digite sua mensagem" required>
+                <button type="submit">Enviar</button>
+            </form>
+            <a href="/">Voltar ao Menu</a>
+        </body>
+        </html>
+    `);
+});
+
+// Rota para enviar mensagens
+app.post('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
+    const nome = req.params.nome;
+    const mensagem = req.body.mensagem;
+
+    // Adiciona a mensagem ao chat do usuário
+    if (!mensagens[nome]) {
+        mensagens[nome] = [];
+    }
+    mensagens[nome].push(mensagem);
+
+    resp.redirect(`/batepapo/${nome}`);
+});
 
 app.listen(porta, host, () => {
     console.log(`Servidor iniciado e em execução no endereço http://${host}:${porta}`);
