@@ -287,29 +287,7 @@ function autenticarLogin(req, resp){
 
 }
 
-//é o nosso middleware de segurançanca
-function verificarAutenticacao(req, resp, next) {
-    if(req.session.usuarioLogado){
-        next();//permita acessar os recursos solicitados
-    }
-    else{
-        resp.redirect('/login.html');
-    }
-}
-
-app.get('/login',(req,resp) =>{  
-
-    resp.sendFile(path.join(__dirname, 'public', 'login.html'));
-    //resp.redirect('/login.html');
-});
-app.post('/login', autenticarLogin);
-app.get('/', verificarAutenticacao, menuView);
-app.get('/cadastrarusuario', verificarAutenticacao, cadastro);//envia o formulario para cadastrar o personagem
-app.post('/cadastrarusuario', verificarAutenticacao, cadastrarusuario);
-
-
-// Rota para exibir o bate-papo de um usuário
-app.get('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
+function batepapo(req, resp){
     const nome = req.params.nome;
     const chatMensagens = mensagens[nome] || []; // Recupera as mensagens ou cria uma lista vazia
 
@@ -335,10 +313,9 @@ app.get('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
         </body>
         </html>
     `);
-});
+}
 
-// Rota para enviar mensagens
-app.post('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
+function enviarmsg(req, resp){
     const nome = req.params.nome;
     const mensagem = req.body.mensagem;
 
@@ -349,8 +326,35 @@ app.post('/batepapo/:nome', verificarAutenticacao, (req, resp) => {
     mensagens[nome].push(mensagem);
 
     resp.redirect(`/batepapo/${nome}`);
+};
+
+//é o nosso middleware de segurançanca
+function verificarAutenticacao(req, resp, next) {
+    if(req.session.usuarioLogado){
+        next();//permita acessar os recursos solicitados
+    }
+    else{
+        resp.redirect('/login.html');
+    }
+}
+
+app.get('/login',(req,resp) =>{  
+
+    resp.sendFile(path.join(__dirname, 'public', 'login.html'));
+    //resp.redirect('/login.html');
 });
+app.post('/login', autenticarLogin);
+app.get('/', verificarAutenticacao, menuView);
+app.get('/cadastrarusuario', verificarAutenticacao, cadastro);//envia o formulario para cadastrar o personagem
+app.post('/cadastrarusuario', verificarAutenticacao, cadastrarusuario);
+
+
+// Rota para exibir o bate-papo de um usuário
+app.get('/batepapo/:nome', verificarAutenticacao,batepapo);
+
+// Rota para enviar mensagens
+app.post('/batepapo/:nome', verificarAutenticacao, enviarmsg);
 
 app.listen(porta, host, () => {
     console.log(`Servidor iniciado e em execução no endereço http://${host}:${porta}`);
-})
+});
