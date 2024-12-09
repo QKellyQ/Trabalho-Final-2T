@@ -3,16 +3,6 @@
 
 
 
-/*Desenvolva um sistema web para uma sala de bate-papo que atenda aos seguintes requisitos:
-
-* Cadastro de usuários: Deve ser possível cadastrar os usuários da sala de bate-papo,
-incluindo nome, e-mail e senha.
-
-* Login e logout: Deve ser possível fazer login e logout da sala de bate-papo.
-
-* Envio e listagem de mensagens: Deve ser possível enviar mensagens para outros usuários
-da sala de bate-papo, além de poder visualizá-las.
-*/
 
 import express from 'express';
 //importando session do modulo express-session;
