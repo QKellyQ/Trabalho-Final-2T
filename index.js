@@ -104,6 +104,7 @@ function menuView(req,resp) {
             <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
             <a class="navbar-brand" href="/cadastrarusuario">MENU</a>
+            <a class="nav-link active" aria-current="page" href="/listados">Pessoas Cadastradas</a>
             <div class="navbar-nav">
                 <a class="nav-link active" aria-current="page" href="/cadastrarusuario">Cadastrar</a>
                 <li class="nav-item">
@@ -117,6 +118,49 @@ function menuView(req,resp) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </html>`);
 }
+
+function listados(req, resp) {
+    resp.write(`
+        <html>
+            <head>
+                <title>Cadastrados </title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">           
+            </head>
+            <body>
+            <h1>Pessoas Cadastradas</h1>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Nome do Cadastrado</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Bate-Papo</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `);
+
+    for (const cadastrado of listacadastrado) {
+        resp.write(`
+            <tr>
+                <td>${cadastrado.nome}</td>
+                <td>${cadastrado.email}</td>
+                <td><a href="/batepapo/${cadastrado.nome}">Abrir Bate-Papo</a></td>
+            </tr>
+        `);
+    }
+
+    resp.write(`
+                </tbody>
+            </table>
+            <a href="/cadastrarusuario">Continuar Cadastrando</a>
+            <a class="text-danger" href="/">Voltar ao Menu</a>
+            </body>
+        </html>
+    `);
+
+    resp.end();
+}
+
 
 function cadastrarusuario(req, resp){
     //recupera dados do formulário
@@ -170,6 +214,7 @@ function cadastrarusuario(req, resp){
         resp.write(`</tbody>
                 </table>
                 <a type="button" href="/cadastrarusuario">Continuar Cadastrando</a>
+                <a type="button" class="text-danger" href="/">Voltar ao Menu</a>
                 </body>
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
             </html>
@@ -348,6 +393,7 @@ app.get('/', verificarAutenticacao, menuView);
 app.get('/cadastrarusuario', verificarAutenticacao, cadastro);//envia o formulario para cadastrar o personagem
 app.post('/cadastrarusuario', verificarAutenticacao, cadastrarusuario);
 
+app.get('/listados', verificarAutenticacao, listados);
 
 // Rota para exibir o bate-papo de um usuário
 app.get('/batepapo/:nome', verificarAutenticacao,batepapo);
